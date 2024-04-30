@@ -1,18 +1,15 @@
 package routes
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/hritesh04/url-shortner/database"
 )
 
 type Request struct{
-	Url string
-	customUrl string
-	Expiry time.Duration
-	UserId int32
+	Url string	
+	CustomUrl string
+	UserId int32	
 }
 
 func Shorten(c *fiber.Ctx)error{
@@ -27,11 +24,20 @@ func Shorten(c *fiber.Ctx)error{
 	db := database.Connect()
 	defer db.Close()
 
-	// rows,err := db.QueryRow("SELECT plan FROM users WHERE id = $1",body.UserId).Scan(&)
+	// check user plan using userId
 
-	if body.customUrl == "" {
-		body.customUrl = uuid.New().String()[:6]
+
+	// set expiry according to the plan
+
+
+	// set Rate remaining according to the plan
+
+
+	if body.CustomUrl == "" {
+		body.CustomUrl = uuid.New().String()[:6]
 	}
+
+	// add to db and send response
 
 	return c.Status(200).JSON(fiber.Map{
 		"success":true,

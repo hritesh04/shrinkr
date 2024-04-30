@@ -2,9 +2,12 @@ package routes
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+
+	jtoken "github.com/golang-jwt/jwt/v4"
 	"github.com/hritesh04/url-shortner/database"
 	"github.com/hritesh04/url-shortner/helper"
 )
@@ -23,15 +26,20 @@ type Url struct{
 	Shortened string
 	User_id int32
 	RateRemaining int32
-	Expiry time.Time
-	RateLimitReset time.Time
+	Expiry time.Duration
+	RateLimitReset time.Duration
 	IsActive bool
 }
 
 
-func GetUserDetails(c *fiber.Ctx)error {
-	userid:=c.Params("userId")
+type Claim struct {
+	jtoken.RegisteredClaims
+	Id int32
+}
 
+
+func GetUserDetails(c *fiber.Ctx)error {
+	userid:=c.Locals("userId")
 	user := Users{}
 	
 	db:= database.Connect()
@@ -87,19 +95,42 @@ func SignUp(c *fiber.Ctx)error {
 
 	db := database.Connect()
 	defer db.Close()
-
-	result ,err := db.Exec("INSERT (name,email,password) INTO USERS VALUES ($1,$2,$3)",body.Name,body.Email,body.Password)
+	
+	var id int32
+	err := db.QueryRow("INSERT INTO USERS (name,email,password) VALUES ($1,$2,$3) RETURNING id;", body.Name, body.Email, body.Password).Scan(&id)
 
 	if err != nil {
 		return c.Status(500).JSON(&fiber.Map{
 			"success":false,
-			"data":"Error Creating USer",
+			"data":err,
 		})
 	}
 
+	// create a token and put in cookie
+
+	data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,Claim{
+		RegisteredClaims: jtoken.RegisteredClaims{},
+		Id:id,
+	})
+
+	token,err := data.SignedString(os.Getenv("SECRET"))
+	if err != nil {
+		return	c.Status(500).JSON(&fiber.Map{
+			"success":false,
+			"data":"Failed to generate token",
+		})
+	}
+
+	cookie := new(fiber.Cookie)
+	cookie.Name="urlshortTkn"
+	cookie.Value=token
+	cookie.Expires=time.Now().Add(24* time.Hour)
+
+	c.Cookie(cookie)
+
 	return c.Status(200).JSON(&fiber.Map{
 		"success":true,
-		"data":result,
+		"data":token,
 	})
 } 
 
@@ -138,9 +169,32 @@ func SignIn(c *fiber.Ctx)error {
 	correctPassword := helper.ComparePassword(user.Password,body.Password)
 
 	if correctPassword {
+
+		// create token and put in cookie
+
+		data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,Claim{
+			RegisteredClaims: jtoken.RegisteredClaims{},
+			Id:user.Id,
+		})
+
+		token,err := data.SignedString([]byte(os.Getenv("SECRET")))
+		if err != nil {
+			return	c.Status(500).JSON(&fiber.Map{
+				"success":false,
+				"data":"Failed to generate token",
+			})
+		}
+
+		cookie := new(fiber.Cookie)
+		cookie.Name="urlshortTkn"
+		cookie.Value=token
+		cookie.Expires=time.Now().Add(24 * time.Hour)
+
+		c.Cookie(cookie)
+
 		return c.Status(200).JSON(&fiber.Map{
 			"success":true,
-			"data":user,
+			"data":token,
 		})
 	}else{
 		return c.Status(400).JSON(&fiber.Map{
@@ -148,5 +202,4 @@ func SignIn(c *fiber.Ctx)error {
 			"data":"Incorrect Password",
 		})
 	}
-
 }
