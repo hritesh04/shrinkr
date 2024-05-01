@@ -35,7 +35,8 @@ func Init() error{
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(60) NOT NULL,
 		email VARCHAR(128) NOT NULL UNIQUE,
-		password VARCHAR(60) NOT NULL
+		password VARCHAR(60) NOT NULL,
+		subscription_type VARCHAR(10) NOT NULL CHECK (subscription_type IN ('free', 'premium'))
 	)
 	`
 	
@@ -47,7 +48,6 @@ func Init() error{
 		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
 		rateRemaining INT DEFAULT 100,
 		expiry DATE DEFAULT CURRENT_DATE + INTERVAL '1 year',
-		rateLimitReset DATE DEFAULT CURRENT_DATE + INTERVAL '1 day',
 		isActive BOOLEAN DEFAULT TRUE
 		)
 		`

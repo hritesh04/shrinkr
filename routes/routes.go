@@ -10,45 +10,19 @@ import (
 	jtoken "github.com/golang-jwt/jwt/v4"
 	"github.com/hritesh04/url-shortner/database"
 	"github.com/hritesh04/url-shortner/helper"
+	"github.com/hritesh04/url-shortner/models"
 )
-
-type Users struct{
-	Id int32
-	Name string
-	Email string
-	Password string
-	Urls []Url
-}
-
-type Url struct{
-	Id int32 
-	Original string
-	Shortened string
-	User_id int32
-	RateRemaining int32
-	Expiry time.Duration
-	RateLimitReset time.Duration
-	IsActive bool
-}
-
-
-type Claim struct {
-	jtoken.RegisteredClaims
-	Id int32
-}
 
 
 func GetUserDetails(c *fiber.Ctx)error {
 	userid:=c.Locals("userId")
-	user := Users{}
+	user := models.Users{}
 	
 	db:= database.Connect()
 	defer db.Close()
 	
-	rows, err := db.Query(`
-		SELECT * FROM USERS WHERE id = $1;`, userid)
+	rows, err := db.Query("SELECT * FROM USERS WHERE id = $1;", userid)
 	if err != nil {
-		fmt.Println(err)
 		return c.Status(400).JSON(&fiber.Map{
 			"success":false,
 			"data":"",
@@ -74,7 +48,7 @@ func GetUserDetails(c *fiber.Ctx)error {
 }
 
 func SignUp(c *fiber.Ctx)error {
-	body := Users{}
+	body := models.Users{}
 	if err := c.BodyParser(&body); err != nil{
 		return c.Status(500).JSON(&fiber.Map{
 			"success":false,
@@ -107,17 +81,16 @@ func SignUp(c *fiber.Ctx)error {
 	}
 
 	// create a token and put in cookie
-
-	data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,Claim{
+	data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,models.Claim{
 		RegisteredClaims: jtoken.RegisteredClaims{},
 		Id:id,
 	})
-
-	token,err := data.SignedString(os.Getenv("SECRET"))
+	
+	token,err := data.SignedString([]byte(os.Getenv("SECRET")))
 	if err != nil {
 		return	c.Status(500).JSON(&fiber.Map{
 			"success":false,
-			"data":"Failed to generate token",
+			"data":data,
 		})
 	}
 
@@ -135,7 +108,7 @@ func SignUp(c *fiber.Ctx)error {
 } 
 
 func SignIn(c *fiber.Ctx)error {
-	body := Users{}
+	body := models.SignUpRequest{}
 
 	if err := c.BodyParser(&body);err != nil{
 		return c.Status(400).JSON(&fiber.Map{
@@ -155,7 +128,7 @@ func SignIn(c *fiber.Ctx)error {
 			"data":"User not found",
 		})
 	}
-	user := Users{}
+	user := models.Users{}
 	for rows.Next(){
 		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password)
 		if err != nil{
@@ -172,7 +145,7 @@ func SignIn(c *fiber.Ctx)error {
 
 		// create token and put in cookie
 
-		data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,Claim{
+		data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,models.Claim{
 			RegisteredClaims: jtoken.RegisteredClaims{},
 			Id:user.Id,
 		})

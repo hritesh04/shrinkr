@@ -19,7 +19,8 @@ func setupRoutes(app *fiber.App){
 	app.Post("/signup", routes.SignUp)
 	app.Get("/:url", routes.Resolve)
 	
-	app.Get("/user/:userId",middleware.UserAuth, routes.GetUserDetails)
+	app.Get("/user/details",middleware.UserAuth, routes.GetUserDetails)
+	app.Post("generateQr",middleware.UserAuth,routes.GenerateQr)
 	app.Post("/shorten",middleware.UserAuth, routes.Shorten)
 }
 

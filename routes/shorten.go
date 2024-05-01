@@ -1,19 +1,22 @@
 package routes
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/hritesh04/url-shortner/database"
+	"github.com/hritesh04/url-shortner/helper"
+	"github.com/hritesh04/url-shortner/models"
 )
 
-type Request struct{
-	Url string	
-	CustomUrl string
-	UserId int32	
-}
+
 
 func Shorten(c *fiber.Ctx)error{
-	body:=Request{}
+	userId := c.Locals("userId")
+	user:=models.Users{}
+	urlData := models.Url{}
+	body:=models.Request{}
 	if err := c.BodyParser(&body); err!=nil{
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success":false,
@@ -21,26 +24,63 @@ func Shorten(c *fiber.Ctx)error{
 		})
 	}
 
+	fmt.Printf("%+v\n", body)
+
 	db := database.Connect()
 	defer db.Close()
 
 	// check user plan using userId
 
+	// ** add subscription coloum and check subscription
 
-	// set expiry according to the plan
+	rows,err := db.Query("SELECT * FROM USERS WHERE id = $1",userId)
 
-
-	// set Rate remaining according to the plan
-
-
-	if body.CustomUrl == "" {
-		body.CustomUrl = uuid.New().String()[:6]
+	if err != nil{
+		return c.Status(500).JSON(&fiber.Map{
+			"success":false,
+			"data":"User not found",
+		})
 	}
 
-	// add to db and send response
+	for rows.Next(){
+		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password)
+		if err != nil{
+			return c.Status(500).JSON(&fiber.Map{
+				"success":false,
+				"data":"User mapping failed",
+			})
+		}
+	}
+
+	
+	
+	// set expiry according to the plan
+	
+	
+	
+	// set Rate remaining according to the plan
+	urlData.Original=body.Url
+	urlData.User_id=user.Id
+	
+	if body.CustomUrl == "" {
+		urlData.Shortened = uuid.New().String()[:6]
+		}else{
+			urlData.Shortened = body.CustomUrl
+		}
+		
+		// add to db and send response
+		
+	fmt.Printf("%+v\n", urlData)
+	data,err := helper.AddUrl(&urlData)
+	if err != nil{
+		return c.Status(500).JSON(&fiber.Map{
+			"success":false,
+			"data":err,
+		})
+	}
 
 	return c.Status(200).JSON(fiber.Map{
 		"success":true,
-		"data":body,
+		"data":data,
 	})
 }
