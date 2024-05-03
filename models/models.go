@@ -11,6 +11,7 @@ type Users struct {
 	Name     string
 	Email    string
 	Password string
+	SubscriptionType string 
 	Urls     []Url
 }
 

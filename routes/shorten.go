@@ -43,7 +43,7 @@ func Shorten(c *fiber.Ctx)error{
 	}
 
 	for rows.Next(){
-		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password)
+		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password,&user.SubscriptionType)
 		if err != nil{
 			return c.Status(500).JSON(&fiber.Map{
 				"success":false,

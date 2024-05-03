@@ -36,7 +36,7 @@ func Init() error{
 		name VARCHAR(60) NOT NULL,
 		email VARCHAR(128) NOT NULL UNIQUE,
 		password VARCHAR(60) NOT NULL,
-		subscription_type VARCHAR(10) NOT NULL CHECK (subscription_type IN ('free', 'premium'))
+		subscription_type VARCHAR(10) NOT NULL CHECK (subscription_type IN ('free', 'premium')) DEFAULT 'free'
 	)
 	`
 	

@@ -31,7 +31,7 @@ func GetUserDetails(c *fiber.Ctx)error {
 	defer rows.Close()
 	
 	for rows.Next(){
-		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password);
+		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password,&user.SubscriptionType);
 		if err != nil {
 			fmt.Println(err)
 			return c.Status(400).JSON(&fiber.Map{
@@ -130,11 +130,11 @@ func SignIn(c *fiber.Ctx)error {
 	}
 	user := models.Users{}
 	for rows.Next(){
-		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password)
+		err := rows.Scan(&user.Id,&user.Name,&user.Email,&user.Password,&user.SubscriptionType)
 		if err != nil{
 			return c.Status(500).JSON(&fiber.Map{
 				"success":false,
-				"data":"User mapping failed",
+				"data":err,
 			})
 		}
 	}
