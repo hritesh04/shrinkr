@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   TbCircleNumber1,
   TbCircleNumber2,
@@ -5,6 +6,7 @@ import {
   TbCircleNumber4,
   TbCircleNumber5,
 } from "react-icons/tb";
+import analytics from "../../../public/Icons/analytics.png";
 
 export default function HowWeWork() {
   return (
@@ -38,6 +40,9 @@ export default function HowWeWork() {
           <TbCircleNumber5 style={{ color: "white" }} size={20} />
           Monitor Your Link
         </p>
+      </div>
+      <div className="px-18 m-auto py-12">
+        <Image src={analytics} alt="analytics" />
       </div>
     </div>
   );
