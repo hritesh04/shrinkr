@@ -1,6 +1,11 @@
 import { IoMdLock } from "react-icons/io";
+import { SetterOrUpdater } from "recoil";
 
-export default function ShortForm() {
+export default function ShortForm({
+  modalToggle,
+}: {
+  modalToggle: SetterOrUpdater<boolean>;
+}) {
   return (
     <div className=" bg-white w-full text-black p-4 flex flex-col gap-4 rounded-b-md rounded-r-md">
       <label className="">Paste the long url</label>
@@ -33,7 +38,10 @@ export default function ShortForm() {
           </div>
         </div>
       </div>
-      <button className=" w-full bg-[#2336f9] p-3 rounded-md text-white">
+      <button
+        className=" w-full bg-[#2336f9] p-3 rounded-md text-white"
+        onClick={() => modalToggle(true)}
+      >
         Shrink It
       </button>
     </div>
