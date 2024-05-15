@@ -29,6 +29,8 @@ type Url struct {
 type Claim struct {
 	jtoken.RegisteredClaims
 	Id int32
+	Authenticated bool
+	SubscriptionType string
 }
 
 type SignUpRequest struct {

@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"expvar"
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hritesh04/url-shortner/database"
@@ -10,12 +11,16 @@ import (
 	"github.com/hritesh04/url-shortner/prometheus"
 )
 
-
-var stats = expvar.NewMap("urlVisitCount").Init()
-
 func Resolve(c *fiber.Ctx)error {
 	url := c.Params("url")
 
+	ctx := context.Background()
+
+	val,err := database.Cache.Get(ctx,url).Result()
+	if err == nil {
+		prometheus.UrlVisitCount.WithLabelValues(url).Inc()
+        return c.Redirect(val,302)
+    }
 	urlDetails:= models.Url{}
 	
 	db := database.Connect()
@@ -39,15 +44,10 @@ func Resolve(c *fiber.Ctx)error {
 			})
 		}
 	}
+	cacheErr := database.Cache.Set(ctx,url,urlDetails.Original,time.Minute*10).Err()
+	if cacheErr != nil {
+		fmt.Println(cacheErr)
+	}
 	prometheus.UrlVisitCount.WithLabelValues(url).Inc()
 	return c.Redirect(urlDetails.Original,302)
-}
-
-func GetStats(c *fiber.Ctx)error{
-	url := c.Query("url")
-	value := stats.Get(url).(*expvar.Int).Value()
-	return c.Status(200).JSON(&fiber.Map{
-		"success":true,
-		"data":value,
-	})
 }

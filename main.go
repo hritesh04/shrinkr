@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hritesh04/url-shortner/database"
 	"github.com/hritesh04/url-shortner/middleware"
@@ -36,13 +37,20 @@ func main() {
 	if err := database.Init(); err!=nil{
 		log.Fatal(err)
 	}
+
 	
 	app:= fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000",
+		AllowCredentials: true,
+	}))
 	
 	app.Use(logger.New())
 	
 	prometheus.InitMetrics()
 	app.Get("/metrics", prometheus.Metrics)
+	
+	database.InitCache()
 	
 	setupRoutes(app)
 	

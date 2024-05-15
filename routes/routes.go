@@ -101,7 +101,7 @@ func SignUp(c *fiber.Ctx)error {
 
 	c.Cookie(cookie)
 
-	return c.Status(200).JSON(&fiber.Map{
+	return c.Status(201).JSON(&fiber.Map{
 		"success":true,
 		"data":token,
 	})
@@ -111,7 +111,7 @@ func SignIn(c *fiber.Ctx)error {
 	body := models.SignUpRequest{}
 
 	if err := c.BodyParser(&body);err != nil{
-		return c.Status(400).JSON(&fiber.Map{
+		return c.Status(500).JSON(&fiber.Map{
 			"success":false,
 			"data":"Error parsing json",
 		})
@@ -123,7 +123,7 @@ func SignIn(c *fiber.Ctx)error {
 	rows,err := db.Query("SELECT * FROM USERS WHERE email = $1",body.Email)
 
 	if err != nil{
-		return c.Status(500).JSON(&fiber.Map{
+		return c.Status(403).JSON(&fiber.Map{
 			"success":false,
 			"data":"User not found",
 		})
@@ -148,8 +148,11 @@ func SignIn(c *fiber.Ctx)error {
 		data := jtoken.NewWithClaims(jtoken.SigningMethodHS256,models.Claim{
 			RegisteredClaims: jtoken.RegisteredClaims{},
 			Id:user.Id,
+			Authenticated:true,
+			SubscriptionType: user.SubscriptionType,
 		})
 
+		
 		token,err := data.SignedString([]byte(os.Getenv("SECRET")))
 		if err != nil {
 			return	c.Status(500).JSON(&fiber.Map{
@@ -157,7 +160,7 @@ func SignIn(c *fiber.Ctx)error {
 				"data":"Failed to generate token",
 			})
 		}
-
+		
 		cookie := new(fiber.Cookie)
 		cookie.Name="urlshortTkn"
 		cookie.Value=token
@@ -165,12 +168,12 @@ func SignIn(c *fiber.Ctx)error {
 
 		c.Cookie(cookie)
 
-		return c.Status(200).JSON(&fiber.Map{
+		return c.Status(201).JSON(&fiber.Map{
 			"success":true,
 			"data":token,
 		})
 	}else{
-		return c.Status(400).JSON(&fiber.Map{
+		return c.Status(403).JSON(&fiber.Map{
 			"success":false,
 			"data":"Incorrect Password",
 		})
