@@ -8,7 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Connect() *sql.DB{
+func connect() *sql.DB{
 
 	connectionStr := os.Getenv("DB_CONNSTR")
 
@@ -20,14 +20,13 @@ func Connect() *sql.DB{
 	return db
 }
 
-func Init() error{
+func Init()(*sql.DB, error){
 
 	connectionStr := os.Getenv("DB_CONNSTR")
-
 	db,err := sql.Open("postgres",connectionStr)
 	if err!= nil{
 		log.Fatal(err)
-		return err
+		return nil,err
 	}
 
 	createUserTable := `
@@ -54,11 +53,11 @@ func Init() error{
 		
 		if _,err:=db.Exec(createUserTable);err != nil {
 			log.Fatal(err)
-			return err
+			return nil,err
 		}
 		if _,err:=db.Exec(createUrlTable);err != nil {
 			log.Fatal(err)
-			return err
+			return nil,err
 		}
-	return nil
+	return connect(),nil
 }

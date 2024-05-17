@@ -1,58 +1,56 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/hritesh04/url-shortner/database"
-	"github.com/hritesh04/url-shortner/middleware"
-	"github.com/hritesh04/url-shortner/prometheus"
-	"github.com/hritesh04/url-shortner/routes"
-	_ "github.com/lib/pq"
-	"github.com/lpernett/godotenv"
+	"github.com/hritesh04/url-shortner/internal/api"
+	"github.com/joho/godotenv"
 )
 
-
-func setupRoutes(app *fiber.App){
-	app.Get("/stats", prometheus.GetStats)
-	app.Post("/signin", routes.SignIn)
-	app.Post("/signup", routes.SignUp)
-	app.Get("/:url", routes.Resolve)
-
-	app.Get("/user/details",middleware.UserAuth, routes.GetUserDetails)
-	app.Post("generateQr",middleware.UserAuth,routes.GenerateQr)
-	app.Post("/shorten",middleware.UserAuth, routes.Shorten)
+func main() {
+	cfg, err := SetupEnv()
+	if err != nil {
+		log.Fatalf("config file is not loaded properly %v\n", err)
+	}
+	api.SetupServer(cfg)
 }
 
 
-func main() {
-	
-	if err := godotenv.Load(); err!=nil{
-		log.Fatal("Failed to Load ENV variables")
-	}
-	
-	if err := database.Init(); err!=nil{
-		log.Fatal(err)
+type AppConfig struct {
+	DB_Str		string
+	Port       string
+	Secret     string
+	Site_url   string
+	Sub_free   string
+	Sub_pre    string
+}
+
+func SetupEnv()(AppConfig,error) {
+	err := godotenv.Load()
+	if err != nil {
+		return AppConfig{},errors.New("failed to load")
 	}
 
-	
-	app:= fiber.New()
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
-		AllowCredentials: true,
-	}))
-	
-	app.Use(logger.New())
-	
-	prometheus.InitMetrics()
-	app.Get("/metrics", prometheus.Metrics)
-	
-	database.InitCache()
-	
-	setupRoutes(app)
-	
-	app.Listen(os.Getenv("PORT"))
+	port := os.Getenv("PORT")
+
+	if len(port) < 1 {
+		return AppConfig{}, errors.New("env variables not found")
+	}
+
+	Dbn := os.Getenv("DB_CONNSTR")
+	if len(Dbn) < 1 {
+		return AppConfig{}, errors.New("env variables not found")
+	}
+
+	secret := os.Getenv("SECRET")
+	if len(secret) < 1 {
+		return AppConfig{}, errors.New("app secret not found")
+	}
+
+	return AppConfig{DB_Str: Dbn,Port:port,Secret: secret,
+		Site_url: 	os.Getenv("SITE_URL"),
+		Sub_free: 	os.Getenv("SUB_FREE"),
+		Sub_pre: 	os.Getenv("SUB_PRE"),},nil
 }

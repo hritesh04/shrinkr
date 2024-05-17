@@ -1,4 +1,4 @@
-package models
+package dto
 
 import (
 	"time"
@@ -29,7 +29,11 @@ type Url struct {
 type Claim struct {
 	jtoken.RegisteredClaims
 	Id int32
-	Authenticated bool
+	SubscriptionType string
+}
+
+type Token struct {
+	Id int32
 	SubscriptionType string
 }
 
@@ -42,4 +46,14 @@ type SignUpRequest struct {
 type Request struct{
 	Url string	
 	CustomUrl string
+}
+
+type QueryResponse struct {
+    Data struct {
+        ResultType string `json:"resultType"`
+        Result     []struct {
+            Metric map[string]string `json:"metric"`
+            Values []interface{}     `json:"values"`
+        } `json:"result"`
+    } `json:"data"`
 }
