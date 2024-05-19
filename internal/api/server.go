@@ -2,7 +2,6 @@ package api
 
 import (
 	"log"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -14,19 +13,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type AppConfig struct {
+	DB_Str		string
+	Port       string
+	Secret     string
+	Site_url   string
+	Sub_free   string
+	Sub_pre    string
+}
 
-
-func SetupServer(cfg interface{}) {
+func SetupServer(cfg AppConfig) {
 	app := fiber.New()
 
 	app.Use(logger.New())
 
-	db,err := database.Init(); if err != nil{
+	db,err := database.Init(cfg.DB_Str); if err != nil{
 		log.Fatalf("database connection error %v\n", err)
 	}
 
 	cache := database.InitCache()
-	auth := helper.SetupAuth(os.Getenv("SECRET"))
+	auth := helper.SetupAuth(cfg.Secret)
 	
 	topics := map[string]*prometheus.CounterVec{
 		"UrlVisitCount":prometheus.NewCounterVec(
@@ -51,10 +57,11 @@ func SetupServer(cfg interface{}) {
 
 	setupRoutes(rh)
 
-	app.Listen(os.Getenv("PORT"))
+	app.Listen(cfg.Port)
 }
 
 func setupRoutes(rh *rest.RestHandler){
 	handlers.SetupMetricsRoute(rh)
 	handlers.SetupUrlRoutes(rh)
+	handlers.SetupUserRoutes(rh)
 }

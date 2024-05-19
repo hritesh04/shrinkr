@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/hritesh04/url-shortner/internal/api/rest"
@@ -36,7 +34,6 @@ func (u *UrlService)Resolve(url string)(string,error){
 	if err != nil {
 		return "",err
 	}
-	fmt.Printf("here : %v",original)
 	cacheErr := u.Repo.SetCache(url,original,time.Minute*10)
 	if cacheErr != nil {
 		return "",cacheErr
@@ -46,22 +43,20 @@ func (u *UrlService)Resolve(url string)(string,error){
 	return original,nil
 }
 
-func (u *UrlService)ShortenUrl(url *dto.Request,user *dto.Token)(*dto.Url,error){
-	var newUrl *dto.Url
-	var err error = nil
-	if user.SubscriptionType == os.Getenv("SUB_PRE") {
+func (u *UrlService)ShortenUrl(url *dto.Request,user *dto.Claim)(*dto.Url,error){
+	if user.SubscriptionType == "prem" {
 		var rate int32 = 100000
 		expiry := time.Now().Add(30*24*time.Hour)
-		newUrl,err = u.Repo.AddUrl(url,user.Id,rate,expiry)
+		newUrl,err := u.Repo.AddUrl(url,user.Id,rate,expiry)
 		if err != nil {
-			return newUrl,err
+			return &dto.Url{},err
 		}
-		return newUrl,err
+		return newUrl,nil
 	}
 	expiry := time.Now().Add(7*24*time.Hour)
-	newUrl,err = u.Repo.AddUrl(url,user.Id,1000,expiry)
+	newUrl,err := u.Repo.AddUrl(url,user.Id,1000,expiry)
 	if err != nil {
-		return newUrl,err
+		return &dto.Url{},err
 	}
-	return newUrl,err
+	return newUrl,nil
 }

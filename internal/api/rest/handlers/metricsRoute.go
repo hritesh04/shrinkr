@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/hritesh04/url-shortner/internal/api/rest"
 )
@@ -28,9 +30,11 @@ func (m *MonitorHandler)GetStats(ctx *fiber.Ctx)error{
 	url := ctx.Query("url")
 	step := ctx.Query("step")
 	limit := ctx.Query("limit")
+	fmt.Println(url,step,limit)
 	data,err := m.svc.GetStats(url,step,limit)
+
 	if err != nil {
-		return ctx.Status(404).JSON(&fiber.Map{
+		return ctx.Status(500).JSON(&fiber.Map{
 			"success":false,
 			"error":err,
 		})

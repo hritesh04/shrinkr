@@ -7,23 +7,22 @@ import (
 )
 
 type Users struct {
-	Id       int32
-	Name     string
-	Email    string
-	Password string
-	SubscriptionType string 
-	Urls     []Url
+	Id       			int32	`json:"id"`
+	Name     			string	`json:"name"`
+	Email    			string	`json:"email"`
+	Password 			string	`json:"password"`
+	SubscriptionType	string 	`json:"subscriptionType"`
+	Urls     			[]Url	`json:"urls"`
 }
 
 type Url struct {
-	Id             int32
-	Original       string
-	Shortened      string
-	User_id        int32
-	RateRemaining  int32
-	Expiry         time.Time
-	RateLimitReset time.Time
-	IsActive       bool
+	Id             int32		`json:"id"`
+	Original       string		`json:"original"`
+	Shortened      string		`json:"shortened"`
+	User_id        int32		`json:"userId"`
+	RateRemaining  int32		`json:"rateRemaining"`
+	Expiry         time.Time	`json:"expiry"`
+	IsActive       bool			`json:"isActive"`
 }
 
 type Claim struct {
@@ -38,22 +37,24 @@ type Token struct {
 }
 
 type SignUpRequest struct {
-	Name string
-	Email string
-	Password string
+	Name		string	`json:"name"`
+	Email		string	`json:"email"`
+	Password	string	`json:"password"`
+}
+type SignInRequest struct {
+	Email		string	`json:"email"`
+	Password	string	`json:"password"`
 }
 
 type Request struct{
-	Url string	
-	CustomUrl string
+	Url			string	`json:"url"`
+	CustomUrl	string	`json:"customUrl"`
 }
 
 type QueryResponse struct {
-    Data struct {
         ResultType string `json:"resultType"`
         Result     []struct {
             Metric map[string]string `json:"metric"`
             Values []interface{}     `json:"values"`
-        } `json:"result"`
-    } `json:"data"`
+    } `json:"result"`
 }

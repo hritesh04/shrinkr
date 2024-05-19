@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/hritesh04/url-shortner/internal/api/rest"
@@ -24,13 +23,13 @@ func NewUrlRepository(db *sql.DB,Cache rest.Cache) *UrlRepository {
 
 func (r *UrlRepository) AddUrl(url *dto.Request,userId int32,rate int32, expiry time.Time)(*dto.Url,error){
 	ctx := context.Background()
-	urlData := dto.Url{}
+	urlData := &dto.Url{}
 
-	err := r.DB.QueryRowContext(ctx,"INSERT INTO URLS (original,shortened,user_id,rateremaining,expiry) VALUES ($1,$2,$3,$4,$5) RETURNING *;", url.Url,url.CustomUrl,userId,rate,expiry).Scan(&urlData)
+	err := r.DB.QueryRowContext(ctx,"INSERT INTO URLS (original,shortened,user_id,rateremaining,expiry) VALUES ($1,$2,$3,$4,$5) RETURNING * ;", url.Url,url.CustomUrl,userId,rate,expiry).Scan(&urlData.Id, &urlData.Original, &urlData.Shortened, &urlData.User_id, &urlData.RateRemaining, &urlData.Expiry,&urlData.IsActive)
 	if err != nil {
-		return &urlData,err
+		return urlData,err
 	}
-	return &urlData,nil
+	return urlData,nil
 
 }
 func (r *UrlRepository) DeleteUrl(){
@@ -49,7 +48,6 @@ func (r *UrlRepository) Resolve(short string)(string,error){
 	var original string
 	rows,err:=r.DB.Query("SELECT original FROM urls WHERE shortened = $1",short)
 	if err != nil{
-		fmt.Println(err)
 		return "",err
 	}
 	for rows.Next(){
@@ -58,7 +56,6 @@ func (r *UrlRepository) Resolve(short string)(string,error){
 			return "",err
 		}
 	}
-	fmt.Println(original)
 	return original,nil
 }
 

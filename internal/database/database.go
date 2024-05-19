@@ -20,9 +20,8 @@ func connect() *sql.DB{
 	return db
 }
 
-func Init()(*sql.DB, error){
+func Init(connectionStr string)(*sql.DB, error){
 
-	connectionStr := os.Getenv("DB_CONNSTR")
 	db,err := sql.Open("postgres",connectionStr)
 	if err!= nil{
 		log.Fatal(err)

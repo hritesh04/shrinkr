@@ -17,39 +17,29 @@ func main() {
 	api.SetupServer(cfg)
 }
 
-
-type AppConfig struct {
-	DB_Str		string
-	Port       string
-	Secret     string
-	Site_url   string
-	Sub_free   string
-	Sub_pre    string
-}
-
-func SetupEnv()(AppConfig,error) {
+func SetupEnv()(api.AppConfig,error) {
 	err := godotenv.Load()
 	if err != nil {
-		return AppConfig{},errors.New("failed to load")
+		return api.AppConfig{},errors.New("failed to load")
 	}
 
 	port := os.Getenv("PORT")
 
 	if len(port) < 1 {
-		return AppConfig{}, errors.New("env variables not found")
+		return api.AppConfig{}, errors.New("env variables not found")
 	}
 
 	Dbn := os.Getenv("DB_CONNSTR")
 	if len(Dbn) < 1 {
-		return AppConfig{}, errors.New("env variables not found")
+		return api.AppConfig{}, errors.New("env variables not found")
 	}
 
 	secret := os.Getenv("SECRET")
 	if len(secret) < 1 {
-		return AppConfig{}, errors.New("app secret not found")
+		return api.AppConfig{}, errors.New("app secret not found")
 	}
 
-	return AppConfig{DB_Str: Dbn,Port:port,Secret: secret,
+	return api.AppConfig{DB_Str: Dbn,Port:port,Secret: secret,
 		Site_url: 	os.Getenv("SITE_URL"),
 		Sub_free: 	os.Getenv("SUB_FREE"),
 		Sub_pre: 	os.Getenv("SUB_PRE"),},nil

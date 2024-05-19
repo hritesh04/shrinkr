@@ -18,11 +18,14 @@ type Cache interface{
 type Auth interface {
 	GetUserData(string)(*dto.Users,error)
 	Authorize(*fiber.Ctx)error
+	HashPassword(string)string
+	ComparePassword(string,string)bool
+	GenerateToken(int32,string)(string,error)
 }
 
 type Monitor interface{
 	Metrics(*fiber.Ctx)error
-	GetStats(string,string,string)(dto.QueryResponse,error)
+	GetStats(string,string,string)(*dto.QueryResponse,error)
 	GetCounter(string)*prometheus.CounterVec
 }
 

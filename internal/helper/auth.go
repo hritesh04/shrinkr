@@ -2,11 +2,12 @@ package helper
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 	jtoken "github.com/golang-jwt/jwt/v4"
 	"github.com/hritesh04/url-shortner/internal/dto"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Auth struct {
@@ -19,6 +20,36 @@ func SetupAuth(secret string) *Auth {
 	}
 }
 
+func (a *Auth)HashPassword(password string)string{
+	hashedPassword,err := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+	if err != nil {
+		return ""
+	}	
+	return string(hashedPassword)
+}
+
+func (a *Auth)ComparePassword(password string,hash string)bool{
+	err := bcrypt.CompareHashAndPassword([]byte(hash),[]byte(password))
+	if err == nil{
+		return true
+	}
+	return false
+}
+
+func (a *Auth)GenerateToken(userId int32,subscription string)(string,error){
+	data := jwt.NewWithClaims(jtoken.SigningMethodHS256,dto.Claim{
+		RegisteredClaims: jtoken.RegisteredClaims{},
+		Id: userId,
+		SubscriptionType: subscription,
+	})
+
+	token,err := data.SignedString([]byte(a.Secret))
+	if err != nil {
+		return "",err
+	}
+	return token,nil
+}
+
 func (a *Auth)GetUserData(token string)(*dto.Users,error){
 	
 	var user dto.Claim
@@ -27,7 +58,7 @@ func (a *Auth)GetUserData(token string)(*dto.Users,error){
 		if _, ok := t.Method.(*jtoken.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(os.Getenv("SECRET")), nil
+		return []byte(a.Secret), nil
 	})
 
 	if err != nil{
@@ -51,7 +82,7 @@ func (a *Auth) Authorize(c *fiber.Ctx)error {
 
 	var userClaim dto.Claim
 
-	token := c.Cookies("urlshortTkn")
+	token := c.Cookies("shrinkr")
 	if token == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"success": true,
@@ -63,7 +94,7 @@ func (a *Auth) Authorize(c *fiber.Ctx)error {
 		if _, ok := t.Method.(*jtoken.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(os.Getenv("SECRET")), nil
+		return []byte(a.Secret), nil
 	})
 
 	if err != nil {

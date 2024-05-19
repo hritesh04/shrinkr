@@ -3,7 +3,6 @@ package prometheus
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -39,7 +38,6 @@ func (m *MonitorService)GetCounter(name string)*prometheus.CounterVec{
 }
 
 func InitMetrics(topics map[string]*prometheus.CounterVec)*MonitorService {
-	fmt.Println("Registered")
 	for _,topic := range topics {
 		prometheus.MustRegister(topic)
 	}
@@ -49,46 +47,61 @@ func InitMetrics(topics map[string]*prometheus.CounterVec)*MonitorService {
 }
 
 
-func (m *MonitorService) GetStats(topic, step, limit string) (dto.QueryResponse, error) {
+func (m *MonitorService) GetStats(topic, step, limit string) (*dto.QueryResponse, error) {
     // Set the time range based on the limit
     offset, err := time.ParseDuration(limit)
+    fmt.Println(offset)
     if err != nil {
-        return dto.QueryResponse{}, err
+        return nil, fmt.Errorf("limit err")
     }
     now := time.Now().UTC()
     end := now
     start := now.Add(-offset)
 
+    fmt.Println(now,end,start)
     // Construct the Prometheus query
     query := fmt.Sprintf("sum(url_visit_count{job=\"prometheus\",url=\"%s\"})&start=%s&end=%s&step=%s",
         topic, start.Format(time.RFC3339), end.Format(time.RFC3339), step)
 
+    fmt.Println(query)
+
     // Construct the URL for the Prometheus query endpoint
     url := fmt.Sprintf("http://localhost:9090/api/v1/query?query=%s", query)
+
+    fmt.Println(url)
 
     // Send the HTTP request to the Prometheus query endpoint
     client := http.Client{}
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {
-        return dto.QueryResponse{}, err
+        return nil, err
     }
     res, err := client.Do(req)
     if err != nil {
-        return dto.QueryResponse{}, err
+        return nil, err
     }
     defer res.Body.Close()
 
     // Read the response body
-    body, err := ioutil.ReadAll(res.Body)
-    if err != nil {
-        return dto.QueryResponse{}, err
+    var body any
+    er := json.NewDecoder(res.Body).Decode(&body)
+    // body, err := ioutil.ReadAll(res.Body)
+    if er != nil {
+        return nil, er
     }
 
+    bodyBytes,err := json.Marshal(body)
+    if err != nil {
+        return nil,err
+    }
+    
     // Parse the response body as JSON
     var response dto.QueryResponse
-    if err := json.Unmarshal(body, &response); err != nil {
-        return dto.QueryResponse{}, err
+    if err := json.Unmarshal(bodyBytes, &response); err != nil {
+        return nil, fmt.Errorf("unmarshal error")
     }
 
-    return response, nil
+    fmt.Println(response)
+
+    return &response, nil
 }

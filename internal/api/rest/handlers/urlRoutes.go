@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/hritesh04/url-shortner/internal/api/rest"
 	"github.com/hritesh04/url-shortner/internal/dto"
@@ -30,14 +28,13 @@ func SetupUrlRoutes(rh *rest.RestHandler) {
 
 	app.Get("/:url", handler.Resolve)
 
-	pvtGroup := app.Group("/url", rh.Auth.Authorize)
+	pvtGroup := app.Group("/", rh.Auth.Authorize)
 	pvtGroup.Post("/shorten", handler.Shorten)
 
 }
 
 func (u *UrlHandler)Resolve(ctx *fiber.Ctx)error{
 	postfix := ctx.Params("url")
-	fmt.Println(postfix)
 	url,err := u.svc.Resolve(postfix)
 	if err != nil {
 		return ctx.Status(404).JSON(&fiber.Map{
@@ -49,16 +46,16 @@ func (u *UrlHandler)Resolve(ctx *fiber.Ctx)error{
 }
 
 func (u *UrlHandler)Shorten(ctx *fiber.Ctx)error{
-	user := ctx.Locals("user").(*dto.Token)
+	user := ctx.Locals("user").(dto.Claim)
 	body := dto.Request{}	
 	if err := ctx.BodyParser(&body); err!=nil{
 		return ctx.Status(500).JSON(&fiber.Map{
 			"success":false,
-			"error":err,
+			"error":"err",
 		})
 	}
 
-	url,err := u.svc.ShortenUrl(&body,user)
+	url,err := u.svc.ShortenUrl(&body,&user)
 	if err != nil {
 		return ctx.Status(500).JSON(&fiber.Map{
 			"success":false,
