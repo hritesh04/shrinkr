@@ -1,7 +1,3 @@
-Here’s a sample README for the **Shrinkr** project:
-
----
-
 # Shrinkr
 
 **Shrinkr** is a URL shortening service built using Go, with features for generating short URLs, QR generation and handling redirection. It also includes Prometheus monitoring for tracking usage metrics, Redis for caching url.
