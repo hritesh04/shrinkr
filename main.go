@@ -17,21 +17,27 @@ func main() {
 	api.SetupServer(cfg)
 }
 
-func SetupEnv()(api.AppConfig,error) {
+func SetupEnv() (api.AppConfig, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return api.AppConfig{},errors.New("failed to load")
+		return api.AppConfig{}, errors.New("failed to load")
 	}
 
 	port := os.Getenv("PORT")
 
 	if len(port) < 1 {
-		return api.AppConfig{}, errors.New("env variables not found")
+		log.Println("port not found, using default port 3000")
+		port = ":3000"
 	}
 
 	Dbn := os.Getenv("DB_CONNSTR")
 	if len(Dbn) < 1 {
-		return api.AppConfig{}, errors.New("env variables not found")
+		return api.AppConfig{}, errors.New("database url not found")
+	}
+
+	PROM_URL := os.Getenv("PROM_URL")
+	if len(PROM_URL) < 1 {
+		return api.AppConfig{}, errors.New("prometheus url not found")
 	}
 
 	secret := os.Getenv("SECRET")
@@ -39,8 +45,8 @@ func SetupEnv()(api.AppConfig,error) {
 		return api.AppConfig{}, errors.New("app secret not found")
 	}
 
-	return api.AppConfig{DB_Str: Dbn,Port:port,Secret: secret,
-		Site_url: 	os.Getenv("SITE_URL"),
-		Sub_free: 	os.Getenv("SUB_FREE"),
-		Sub_pre: 	os.Getenv("SUB_PRE"),},nil
+	return api.AppConfig{DB_Str: Dbn, Port: port, Secret: secret,
+		Site_url: os.Getenv("SITE_URL"),
+		Sub_free: os.Getenv("SUB_FREE"),
+		Sub_pre:  os.Getenv("SUB_PRE")}, nil
 }

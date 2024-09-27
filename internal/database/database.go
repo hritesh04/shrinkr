@@ -8,7 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func connect() *sql.DB{
+func connect() *sql.DB {
 
 	connectionStr := os.Getenv("DB_CONNSTR")
 
@@ -20,12 +20,11 @@ func connect() *sql.DB{
 	return db
 }
 
-func Init(connectionStr string)(*sql.DB, error){
-
-	db,err := sql.Open("postgres",connectionStr)
-	if err!= nil{
+func Init(connectionStr string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", connectionStr)
+	if err != nil {
 		log.Fatal(err)
-		return nil,err
+		return nil, err
 	}
 
 	createUserTable := `
@@ -37,7 +36,7 @@ func Init(connectionStr string)(*sql.DB, error){
 		subscription_type VARCHAR(10) NOT NULL CHECK (subscription_type IN ('free', 'premium')) DEFAULT 'free'
 	)
 	`
-	
+
 	createUrlTable := `
 	CREATE TABLE IF NOT EXISTS urls (
 		id SERIAL PRIMARY KEY,
@@ -49,14 +48,14 @@ func Init(connectionStr string)(*sql.DB, error){
 		isActive BOOLEAN DEFAULT TRUE
 		)
 		`
-		
-		if _,err:=db.Exec(createUserTable);err != nil {
-			log.Fatal(err)
-			return nil,err
-		}
-		if _,err:=db.Exec(createUrlTable);err != nil {
-			log.Fatal(err)
-			return nil,err
-		}
-	return connect(),nil
+
+	if _, err := db.Exec(createUserTable); err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	if _, err := db.Exec(createUrlTable); err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	return connect(), nil
 }

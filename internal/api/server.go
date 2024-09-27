@@ -14,6 +14,7 @@ import (
 
 type AppConfig struct {
 	DB_Str   string
+	PROM_URL string
 	Port     string
 	Secret   string
 	Site_url string
@@ -34,7 +35,7 @@ func SetupServer(cfg AppConfig) {
 	cache := database.InitCache()
 	auth := helper.SetupAuth(cfg.Secret)
 
-	monitor := monitor.NewMonitorService()
+	monitor := monitor.NewMonitorService(cfg.PROM_URL)
 
 	rh := &rest.RestHandler{
 		App:     app,

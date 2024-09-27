@@ -39,9 +39,9 @@ func (m *MonitorService) Increment(name, topic string) {
 	m.Topics[name].WithLabelValues(topic).Inc()
 }
 
-func NewMonitorService() *MonitorService {
+func NewMonitorService(url string) *MonitorService {
 	connection, err := api.NewClient(api.Config{
-		Address: "http://localhost:9090",
+		Address: url,
 	})
 	if err != nil {
 		fmt.Printf("Error creating client: %v\n", err)
