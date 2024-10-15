@@ -17,8 +17,8 @@ func SetupUrlRoutes(rh *rest.RestHandler) {
 	app := rh.App
 
 	svc := service.UrlService{
-		Repo: repository.NewUrlRepository(rh.DB,rh.Cache),
-		Auth:	rh.Auth,
+		Repo:    repository.NewUrlRepository(rh.DB, rh.Cache),
+		Auth:    rh.Auth,
 		Monitor: rh.Monitor,
 	}
 
@@ -33,39 +33,39 @@ func SetupUrlRoutes(rh *rest.RestHandler) {
 
 }
 
-func (u *UrlHandler)Resolve(ctx *fiber.Ctx)error{
+func (u *UrlHandler) Resolve(ctx *fiber.Ctx) error {
 	postfix := ctx.Params("url")
-	url,err := u.svc.Resolve(postfix)
+	url, err := u.svc.Resolve(postfix)
 	if err != nil {
 		return ctx.Status(404).JSON(&fiber.Map{
-			"success":false,
-			"error":err,
+			"success": false,
+			"error":   err,
 		})
 	}
 	return ctx.Status(301).Redirect(url)
 }
 
-func (u *UrlHandler)Shorten(ctx *fiber.Ctx)error{
+func (u *UrlHandler) Shorten(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(dto.Claim)
-	body := dto.Request{}	
-	if err := ctx.BodyParser(&body); err!=nil{
+	body := dto.Request{}
+	if err := ctx.BodyParser(&body); err != nil {
 		return ctx.Status(500).JSON(&fiber.Map{
-			"success":false,
-			"error":"err",
+			"success": false,
+			"error":   "err",
 		})
 	}
 
-	url,err := u.svc.ShortenUrl(&body,&user)
+	url, err := u.svc.ShortenUrl(&body, &user)
 	if err != nil {
 		return ctx.Status(500).JSON(&fiber.Map{
-			"success":false,
-			"error":err,
+			"success": false,
+			"error":   err,
 		})
 	}
 
 	return ctx.Status(200).JSON(&fiber.Map{
-		"success":true,
-		"data":url,
+		"success": true,
+		"data":    url,
 	})
 
 }

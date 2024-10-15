@@ -52,6 +52,6 @@ func SetupServer(cfg AppConfig) {
 
 func setupRoutes(rh *rest.RestHandler) {
 	handlers.SetupMetricsRoute(rh)
-	handlers.SetupUrlRoutes(rh)
 	handlers.SetupUserRoutes(rh)
+	handlers.SetupUrlRoutes(rh)
 }

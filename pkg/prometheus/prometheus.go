@@ -66,19 +66,25 @@ func (m *MonitorService) GetStats(topic, step, limit string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("step err")
 	}
-	now := time.Now().UTC()
-	end := now
-	start := now.Add(-offset)
 
-	queryRange, _, err := m.Client.QueryRange(context.Background(), topic, v1.Range{
+	start := time.Now().Add(-offset)
+	end := time.Now()
+
+	fmt.Println(start)
+	fmt.Println(end)
+	fmt.Println(stepDuration)
+
+	query := fmt.Sprintf(`url_visit_count{url=%s}`, topic)
+	queryRange, _, err := m.Client.QueryRange(context.Background(), query, v1.Range{
 		Start: start,
 		End:   end,
 		Step:  stepDuration,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-
+	fmt.Println(queryRange)
 	value, err := queryRange.Type().MarshalJSON()
 	if err != nil {
 		return nil, err
