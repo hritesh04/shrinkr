@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hritesh04/url-shortner/internal/dto"
+	"github.com/prometheus/common/model"
 )
 
 type Cache interface {
@@ -24,7 +25,7 @@ type Auth interface {
 
 type Monitor interface {
 	Metrics(*fiber.Ctx) error
-	GetStats(string, string, string) ([]byte, error)
+	GetStats(string, string, string) ([]model.SamplePair, error)
 	Increment(string, string)
 }
 

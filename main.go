@@ -46,6 +46,7 @@ func SetupEnv() (api.AppConfig, error) {
 	}
 
 	return api.AppConfig{DB_Str: Dbn, Port: port, Secret: secret,
+		PROM_URL: PROM_URL,
 		Site_url: os.Getenv("SITE_URL"),
 		Sub_free: os.Getenv("SUB_FREE"),
 		Sub_pre:  os.Getenv("SUB_PRE")}, nil

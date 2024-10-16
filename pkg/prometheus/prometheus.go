@@ -11,6 +11,7 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
@@ -36,7 +37,7 @@ func (m *MonitorService) Metrics(c *fiber.Ctx) error {
 }
 
 func (m *MonitorService) Increment(name, topic string) {
-	m.Topics[name].WithLabelValues(topic).Inc()
+	m.Topics[name].WithLabelValues(topic).Add(1)
 }
 
 func NewMonitorService(url string) *MonitorService {
@@ -57,7 +58,7 @@ func NewMonitorService(url string) *MonitorService {
 	}
 }
 
-func (m *MonitorService) GetStats(topic, step, limit string) ([]byte, error) {
+func (m *MonitorService) GetStats(topic, step, limit string) ([]model.SamplePair, error) {
 	offset, err := time.ParseDuration(limit)
 	if err != nil {
 		return nil, fmt.Errorf("limit err")
@@ -70,24 +71,21 @@ func (m *MonitorService) GetStats(topic, step, limit string) ([]byte, error) {
 	start := time.Now().Add(-offset)
 	end := time.Now()
 
-	fmt.Println(start)
-	fmt.Println(end)
-	fmt.Println(stepDuration)
-
-	query := fmt.Sprintf(`url_visit_count{url=%s}`, topic)
+	query := fmt.Sprintf(`url_visit_count{url="%s"}`, topic)
 	queryRange, _, err := m.Client.QueryRange(context.Background(), query, v1.Range{
 		Start: start,
 		End:   end,
 		Step:  stepDuration,
 	})
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-	fmt.Println(queryRange)
-	value, err := queryRange.Type().MarshalJSON()
-	if err != nil {
-		return nil, err
+
+	dataModel := queryRange.(model.Matrix)
+	var data []model.SamplePair
+	if dataModel.Len() < 1 {
+		return data, nil
 	}
-	return value, nil
+	data = append(data, dataModel[0].Values...)
+	return data, nil
 }
