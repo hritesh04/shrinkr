@@ -51,10 +51,9 @@ func (u *UrlHandler) Shorten(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&body); err != nil {
 		return ctx.Status(500).JSON(&fiber.Map{
 			"success": false,
-			"error":   "err",
+			"error":   err,
 		})
 	}
-
 	url, err := u.svc.ShortenUrl(&body, &user)
 	if err != nil {
 		return ctx.Status(500).JSON(&fiber.Map{

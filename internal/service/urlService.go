@@ -9,13 +9,10 @@ import (
 
 type UrlRepository interface {
 	AddUrl(*dto.Request, int32, int32, time.Time) (*dto.Url, error)
-	DeleteUrl()
-	UpdateUrl()
-	FindUrlMetricsById()
-	FindUrlByUser()
 	Resolve(string) (string, error)
 	GetCache(string) (string, error)
 	SetCache(string, string, time.Duration) error
+	UpdateUrlRate()
 }
 
 type UrlService struct {
@@ -28,6 +25,7 @@ func (u *UrlService) Resolve(url string) (string, error) {
 	val, _ := u.Repo.GetCache(url)
 	if val != "" {
 		u.Monitor.Increment("UrlVisitCount", url)
+		u.Repo.UpdateUrlRate()
 		return val, nil
 	}
 	original, err := u.Repo.Resolve(url)
@@ -39,7 +37,7 @@ func (u *UrlService) Resolve(url string) (string, error) {
 		return "", cacheErr
 	}
 	u.Monitor.Increment("UrlVisitCount", url)
-
+	u.Repo.UpdateUrlRate()
 	return original, nil
 }
 
@@ -53,6 +51,7 @@ func (u *UrlService) ShortenUrl(url *dto.Request, user *dto.Claim) (*dto.Url, er
 		}
 		return newUrl, nil
 	}
+	// url.CustomUrl = uuid.New().String()
 	expiry := time.Now().Add(7 * 24 * time.Hour)
 	newUrl, err := u.Repo.AddUrl(url, user.Id, 1000, expiry)
 	if err != nil {
